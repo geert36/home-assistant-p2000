@@ -18,12 +18,16 @@ DEFAULT_ICON = "mdi:ambulance"
 
 CONF_GEMEENTEN = "gemeenten"
 CONF_CAPCODES = "capcodes"
+CONF_REGIOS = "regios"
+CONF_DISCIPLINES = "disciplines"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
     vol.Optional(CONF_GEMEENTEN): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_CAPCODES): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon
+    vol.Optional(CONF_REGIOS): cv.string,
+    vol.Optional(CONF_DISCIPLINES): cv.string,
 })
 
 
