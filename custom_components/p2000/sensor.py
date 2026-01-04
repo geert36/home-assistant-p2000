@@ -1,6 +1,6 @@
 import logging
 import voluptuous as vol
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_ICON
@@ -42,12 +42,15 @@ async def async_setup_platform(
     name = config.get(CONF_NAME)
     icon = config.get(CONF_ICON)
 
-    api_filter = {
-        "gemeenten": config.get(CONF_GEMEENTEN, []),
-        "capcodes": config.get(CONF_CAPCODES, []),
-        "regios": config.get(CONF_REGIOS, ""),
-        "disciplines": config.get(CONF_DISCIPLINES, ""),
-    }
+    api_filter: Dict[str, Any] = {}
+    if config.get(CONF_GEMEENTEN):
+        api_filter["gemeenten"] = config[CONF_GEMEENTEN]
+    if config.get(CONF_CAPCODES):
+        api_filter["capcodes"] = config[CONF_CAPCODES]
+    if config.get(CONF_REGIOS):
+        api_filter["regios"] = config[CONF_REGIOS]
+    if config.get(CONF_DISCIPLINES):
+        api_filter["disciplines"] = config[CONF_DISCIPLINES]
 
     _LOGGER.info("P2000 filter being used: %s", api_filter)
 
@@ -92,15 +95,29 @@ class P2000Sensor(SensorEntity):
             data = await self.api.get_data(self.api_filter)
 
             if not data:
+                _LOGGER.debug("No P2000 data returned for filter: %s", self.api_filter)
                 self._attr_native_value = None
                 self._attr_extra_state_attributes = {}
                 return
+
+            # defensief checken of het dict is
+            if not isinstance(data, dict):
+                _LOGGER.warning("Unexpected data format: %s", data)
+                self._attr_native_value = None
+                self._attr_extra_state_attributes = {}
+                return
+
+            # Lat/lon hernoemen als dat nog niet gebeurd is
+            if "lat" in data:
+                data["latitude"] = data.pop("lat")
+            if "lon" in data:
+                data["longitude"] = data.pop("lon")
 
             self._attr_native_value = data.get("id")
             self._attr_extra_state_attributes = data
 
             if self._attr_native_value is None:
-                _LOGGER.warning("Received data does not contain an 'id'")
+                _LOGGER.debug("Received P2000 data does not contain 'id': %s", data)
 
         except Exception as err:
             _LOGGER.error("Error updating P2000 sensor: %s", err)
