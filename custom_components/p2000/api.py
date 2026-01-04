@@ -1,42 +1,49 @@
-import requests
 import json
+import logging
+from aiohttp import ClientTimeout
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+_LOGGER = logging.getLogger(__name__)
 
 class P2000Api:
     url = "https://beta.alarmeringdroid.nl/api2/find/"
 
-    def __init__(self):
-        self.session = requests.Session()
+    def __init__(self, hass):
+        self.hass = hass
+        self.session = async_get_clientsession(hass)
 
-    def get_data(self, apiFilter):
+    async def get_data(self, apiFilter):
+        try:
+            async with self.session.get(
+                self.url + json.dumps(apiFilter),
+                timeout=ClientTimeout(total=10),
+                allow_redirects=False
+            ) as response:
 
-        response = self.session.get(self.url + json.dumps(apiFilter),
-                                    params={},
-                                    allow_redirects=False)
+                if response.status != 200:
+                    _LOGGER.error(
+                        "P2000 API error (%s) for filter %s",
+                        response.status,
+                        apiFilter,
+                    )
+                    return None
 
-        if response.status_code != 200:
-            raise RuntimeError("Request failed: %s", response)
+                data = await response.json()
 
-        data = json.loads(response.content.decode('utf-8'))
-        
-        if (len(data['meldingen']) == 0):
-            return None;
-
-        # Get the first melding, maybe extend it later for multiple messages.
-        result = data['meldingen'][0]
-
-        if (result == None):
+        except Exception as err:
+            _LOGGER.exception("P2000 API request failed: %s", err)
             return None
 
+        if not data.get("meldingen"):
+            return None
 
-        # Rename lat & lon
-        result["latitude"] =  result.get("lat", None)
-        result["longitude"] = result.get("lon", None)  
+        # Eerste melding
+        result = data["meldingen"][0]
+        if result is None:
+            return None
 
-        if 'lat' in result:
-            del result['lat']
+        # lat / lon hernoemen
+        result["latitude"] = result.pop("lat", None)
+        result["longitude"] = result.pop("lon", None)
 
-        if 'lon' in result:
-            del result['lon']
-
-        # Return result
         return result
