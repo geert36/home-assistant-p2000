@@ -1,15 +1,17 @@
 import logging
 import voluptuous as vol
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.helpers.config_validation as cv
 
 from .api import P2000Api
+from .coordinator import P2000DataUpdateCoordinator
 from .const import (
     DEFAULT_NAME,
     DEFAULT_ICON,
@@ -32,13 +34,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: Dict[str, Any],
     async_add_entities: AddEntitiesCallback,
     discovery_info=None,
 ) -> None:
-    """Set up the P2000 sensor platform asynchronously."""
+    """Set up the P2000 sensor platform."""
     name = config.get(CONF_NAME)
     icon = config.get(CONF_ICON)
 
@@ -54,72 +57,89 @@ async def async_setup_platform(
 
     _LOGGER.info("P2000 filter being used: %s", api_filter)
 
-    # Gebruik de Home Assistant aiohttp session
     session = async_get_clientsession(hass)
     api = P2000Api(session)
 
-    async_add_entities(
-        [P2000Sensor(api, name, icon, api_filter)],
-        update_before_add=True,
+    coordinator = P2000DataUpdateCoordinator(
+        hass=hass,
+        api=api,
+        api_filter=api_filter,
+        update_interval=30,
     )
 
-class P2000Sensor(SensorEntity):
+    # Eerste fetch, anders blijft data = None
+    await coordinator.async_config_entry_first_refresh()
+
+    async_add_entities(
+        [P2000Sensor(coordinator, name, icon)],
+    )
+
+
+class P2000Sensor(CoordinatorEntity, SensorEntity):
     """Representation of a P2000 Sensor."""
 
     def __init__(
         self,
-        api: P2000Api,
+        coordinator: P2000DataUpdateCoordinator,
         name: str,
         icon: str,
-        api_filter: Dict[str, Any],
     ):
-        self.api = api
-        self.api_filter = api_filter
+        super().__init__(coordinator)
 
         self._attr_name = name
         self._attr_icon = icon
-        self._attr_native_value: str | None = None
-        self._attr_extra_state_attributes: Dict[str, Any] = {}
-
-        # Uniek ID (nodig voor entity registry)
         self._attr_unique_id = f"p2000_{name.lower()}"
 
-    async def async_update(self) -> None:
-        """Fetch new state data for the sensor."""
+    @property
+    def native_value(self) -> str | None:
+        """Return the sensor state."""
+        data = self.coordinator.data
+        if not data:
+            return None
+        return data.get("id")
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Return extra state attributes."""
+        data = self.coordinator.data
+        if not data:
+            return {}
+
+        attrs: Dict[str, Any] = {}
+
+        # Basis melding
+        attrs["melding"] = data.get("melding")
+        attrs["tekstmelding"] = data.get("tekstmelding")
+
+        # Context (zonder id-velden)
+        attrs["dienst"] = data.get("dienst", "Onbekend")
+        attrs["regio"] = data.get("regio", "Onbekend")
+        attrs["plaats"] = data.get("plaats")
+        attrs["postcode"] = data.get("postcode", "Onbekend")
+        attrs["straat"] = data.get("straat")
+        attrs["datum"] = data.get("datum")
+        attrs["tijd"] = data.get("tijd")
+
+        # Prioriteit → boolean
+        attrs["prio1"] = str(data.get("prio1")) == "1"
+
+        attrs["brandinfo"] = data.get("brandinfo", "Onbekend")
+        attrs["grip"] = data.get("grip")
+
+        # Capcodes (meerdere mogelijk)
+        capcodes = data.get("capcodes", [])
+        attrs["capcodes"] = capcodes
+        attrs["capcodes_str"] = ", ".join(
+            f"{c.get('capcode')} ({c.get('omschrijving')})"
+            for c in capcodes
+        )
+
+        # Locatie
         try:
-            _LOGGER.debug(
-                "Fetching P2000 data with filter: %s",
-                self.api_filter,
-            )
+            attrs["latitude"] = float(data.get("latitude"))
+            attrs["longitude"] = float(data.get("longitude"))
+        except (TypeError, ValueError):
+            attrs["latitude"] = None
+            attrs["longitude"] = None
 
-            data = await self.api.get_data(self.api_filter)
-
-            if not data:
-                _LOGGER.debug("No P2000 data returned for filter: %s", self.api_filter)
-                self._attr_native_value = None
-                self._attr_extra_state_attributes = {}
-                return
-
-            # defensief checken of het dict is
-            if not isinstance(data, dict):
-                _LOGGER.warning("Unexpected data format: %s", data)
-                self._attr_native_value = None
-                self._attr_extra_state_attributes = {}
-                return
-
-            # Lat/lon hernoemen als dat nog niet gebeurd is
-            if "lat" in data:
-                data["latitude"] = data.pop("lat")
-            if "lon" in data:
-                data["longitude"] = data.pop("lon")
-
-            self._attr_native_value = data.get("id")
-            self._attr_extra_state_attributes = data
-
-            if self._attr_native_value is None:
-                _LOGGER.debug("Received P2000 data does not contain 'id': %s", data)
-
-        except Exception as err:
-            _LOGGER.error("Error updating P2000 sensor: %s", err)
-            self._attr_native_value = None
-            self._attr_extra_state_attributes = {}
+        return attrs
