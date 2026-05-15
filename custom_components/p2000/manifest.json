@@ -1,9 +1,10 @@
 {
   "domain": "p2000",
   "name": "P2000 Sensor",
-  "documentation": "",
+  "documentation": "https://github.com/geert36/home-assistant-p2000",
+  "issue_tracker": "https://github.com/geert36/home-assistant-p2000/issues",
   "dependencies": [],
-  "codeowners": ["@leeuwte","@geert36"],
+  "codeowners": ["@leeuwte", "@geert36"],
   "requirements": [],
-  "version" : "0.0.5"
+  "version": "0.0.5"
 }
