@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "P2000",
+        "description": "Stel je P2000 sensor in.",
+        "data": {
+          "name": "Naam",
+          "icon": "Icoon",
+          "capcodes": "Capcodes",
+          "gemeenten": "Gemeenten",
+          "regios": "Regio's",
+          "disciplines": "Disciplines"
+        },
+        "data_description": {
+          "capcodes": "Een of meer capcodes waarop gefilterd moet worden.",
+          "gemeenten": "Een of meer gemeenten waarop gefilterd moet worden.",
+          "regios": "Regio's waarop gefilterd moet worden.",
+          "disciplines": "Disciplines waarop gefilterd moet worden."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Deze P2000 sensor is al geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "P2000 opties",
+        "description": "Pas de P2000 sensor aan.",
+        "data": {
+          "name": "Naam",
+          "icon": "Icoon",
+          "capcodes": "Capcodes",
+          "gemeenten": "Gemeenten",
+          "regios": "Regio's",
+          "disciplines": "Disciplines"
+        },
+        "data_description": {
+          "capcodes": "Een of meer capcodes waarop gefilterd moet worden.",
+          "gemeenten": "Een of meer gemeenten waarop gefilterd moet worden.",
+          "regios": "Regio's waarop gefilterd moet worden.",
+          "disciplines": "Disciplines waarop gefilterd moet worden."
+        }
+      }
+    }
+  }
+}
