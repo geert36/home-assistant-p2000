@@ -21,6 +21,7 @@ from .const import (
     CONF_DISCIPLINES,
     CONF_GEMEENTEN,
     CONF_ICON,
+    CONF_PRIO1,
     CONF_REGIOS,
     DEFAULT_ICON,
     DEFAULT_NAME,
@@ -37,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_CAPCODES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_REGIOS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_DISCIPLINES): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_PRIO1, default=False): cv.boolean,
     }
 )
 
@@ -73,6 +75,8 @@ async def async_setup_entry(
         api_filter["regios"] = config[CONF_REGIOS]
     if config.get(CONF_DISCIPLINES):
         api_filter["disciplines"] = config[CONF_DISCIPLINES]
+    if config.get(CONF_PRIO1):
+        api_filter["prio1"] = True
 
     _LOGGER.info("P2000 filter being used: %s", api_filter)
     session = async_get_clientsession(hass)
