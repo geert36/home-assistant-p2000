@@ -13,10 +13,10 @@
           "disciplines": "Disciplines"
         },
         "data_description": {
-          "capcodes": "Een of meer capcodes waarop gefilterd moet worden.",
-          "gemeenten": "Een of meer gemeenten waarop gefilterd moet worden.",
-          "regios": "Regio's waarop gefilterd moet worden.",
-          "disciplines": "Disciplines waarop gefilterd moet worden."
+          "capcodes": "Een of meer capcodes, gescheiden met komma's of nieuwe regels.",
+          "gemeenten": "Een of meer gemeenten, gescheiden met komma's of nieuwe regels.",
+          "regios": "Selecteer een of meer veiligheidsregio's.",
+          "disciplines": "Selecteer een of meer disciplines."
         }
       }
     },
@@ -38,10 +38,10 @@
           "disciplines": "Disciplines"
         },
         "data_description": {
-          "capcodes": "Een of meer capcodes waarop gefilterd moet worden.",
-          "gemeenten": "Een of meer gemeenten waarop gefilterd moet worden.",
-          "regios": "Regio's waarop gefilterd moet worden.",
-          "disciplines": "Disciplines waarop gefilterd moet worden."
+          "capcodes": "Een of meer capcodes, gescheiden met komma's of nieuwe regels.",
+          "gemeenten": "Een of meer gemeenten, gescheiden met komma's of nieuwe regels.",
+          "regios": "Selecteer een of meer veiligheidsregio's.",
+          "disciplines": "Selecteer een of meer disciplines."
         }
       }
     }
