@@ -6,13 +6,14 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import CONF_ICON, CONF_NAME
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CAPCODES,
     CONF_DISCIPLINES,
     CONF_GEMEENTEN,
+    CONF_ICON,
     CONF_REGIOS,
     DEFAULT_ICON,
     DEFAULT_NAME,
@@ -25,6 +26,26 @@ LIST_OPTIONS = (CONF_CAPCODES, CONF_GEMEENTEN)
 TEXT_OPTIONS = (CONF_REGIOS, CONF_DISCIPLINES)
 
 
+def _list_to_text(value: Any) -> str:
+    """Convert a list-style config value to editable text."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    return ", ".join(str(item) for item in cv.ensure_list(value) if item)
+
+
+def _text_to_list(value: Any) -> list[str]:
+    """Convert comma or newline separated text to a list."""
+    if not value:
+        return []
+    if not isinstance(value, str):
+        return [str(item).strip() for item in cv.ensure_list(value) if str(item).strip()]
+
+    parts = value.replace("\n", ",").split(",")
+    return [part.strip() for part in parts if part.strip()]
+
+
 def _normalize_config(config: dict[str, Any]) -> dict[str, Any]:
     """Normalize imported and UI config data."""
     normalized = dict(config)
@@ -32,8 +53,7 @@ def _normalize_config(config: dict[str, Any]) -> dict[str, Any]:
     normalized[CONF_ICON] = normalized.get(CONF_ICON) or DEFAULT_ICON
 
     for key in LIST_OPTIONS:
-        value = normalized.get(key, [])
-        normalized[key] = cv.ensure_list(value) if value else []
+        normalized[key] = _text_to_list(normalized.get(key))
 
     for key in TEXT_OPTIONS:
         normalized[key] = normalized.get(key) or ""
@@ -47,13 +67,13 @@ def _options_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_NAME, default=defaults[CONF_NAME]): cv.string,
-            vol.Optional(CONF_ICON, default=defaults[CONF_ICON]): cv.icon,
-            vol.Optional(CONF_CAPCODES, default=defaults[CONF_CAPCODES]): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
-            vol.Optional(CONF_GEMEENTEN, default=defaults[CONF_GEMEENTEN]): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
+            vol.Optional(CONF_ICON, default=defaults[CONF_ICON]): cv.string,
+            vol.Optional(
+                CONF_CAPCODES, default=_list_to_text(defaults[CONF_CAPCODES])
+            ): cv.string,
+            vol.Optional(
+                CONF_GEMEENTEN, default=_list_to_text(defaults[CONF_GEMEENTEN])
+            ): cv.string,
             vol.Optional(CONF_REGIOS, default=defaults[CONF_REGIOS]): cv.string,
             vol.Optional(
                 CONF_DISCIPLINES, default=defaults[CONF_DISCIPLINES]
