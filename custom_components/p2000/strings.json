@@ -10,13 +10,15 @@
           "capcodes": "Capcodes",
           "gemeenten": "Gemeenten",
           "regios": "Regio's",
-          "disciplines": "Disciplines"
+          "disciplines": "Disciplines",
+          "prio1": "Alleen prio 1"
         },
         "data_description": {
           "capcodes": "Een of meer capcodes, gescheiden met komma's of nieuwe regels.",
           "gemeenten": "Een of meer gemeenten, gescheiden met komma's of nieuwe regels.",
           "regios": "Selecteer een of meer veiligheidsregio's.",
-          "disciplines": "Selecteer een of meer disciplines."
+          "disciplines": "Selecteer een of meer disciplines.",
+          "prio1": "Filter de meldingen op prio 1."
         }
       }
     },
@@ -35,13 +37,15 @@
           "capcodes": "Capcodes",
           "gemeenten": "Gemeenten",
           "regios": "Regio's",
-          "disciplines": "Disciplines"
+          "disciplines": "Disciplines",
+          "prio1": "Alleen prio 1"
         },
         "data_description": {
           "capcodes": "Een of meer capcodes, gescheiden met komma's of nieuwe regels.",
           "gemeenten": "Een of meer gemeenten, gescheiden met komma's of nieuwe regels.",
           "regios": "Selecteer een of meer veiligheidsregio's.",
-          "disciplines": "Selecteer een of meer disciplines."
+          "disciplines": "Selecteer een of meer disciplines.",
+          "prio1": "Filter de meldingen op prio 1."
         }
       }
     }
