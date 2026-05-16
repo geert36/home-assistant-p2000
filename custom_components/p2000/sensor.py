@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ICON, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,6 +20,7 @@ from .const import (
     CONF_CAPCODES,
     CONF_DISCIPLINES,
     CONF_GEMEENTEN,
+    CONF_ICON,
     CONF_REGIOS,
     DEFAULT_ICON,
     DEFAULT_NAME,
@@ -31,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
+        vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.string,
         vol.Optional(CONF_GEMEENTEN): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CAPCODES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_REGIOS): cv.string,
