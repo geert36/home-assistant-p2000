@@ -35,8 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.string,
         vol.Optional(CONF_GEMEENTEN): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CAPCODES): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_REGIOS): cv.string,
-        vol.Optional(CONF_DISCIPLINES): cv.string,
+        vol.Optional(CONF_REGIOS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_DISCIPLINES): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
