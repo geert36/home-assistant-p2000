@@ -68,15 +68,13 @@ class P2000FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     @staticmethod
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+    def async_get_options_flow(config_entry: config_entries.ConfigEntry):
         """Create the options flow."""
-        return P2000OptionsFlowHandler(config_entry)
+        return P2000OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ):
         """Handle the initial step from the user (UI)."""
         if user_input is None:
             return self.async_show_form(
@@ -91,7 +89,7 @@ class P2000FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(
         self, import_config: dict[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    ):
         """Import a YAML config entry."""
         import_config = _normalize_config(import_config)
         await self.async_set_unique_id(import_config[CONF_NAME].lower())
@@ -106,13 +104,9 @@ class P2000FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class P2000OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle P2000 options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ):
         """Manage P2000 options."""
         if user_input is not None:
             return self.async_create_entry(
