@@ -8,13 +8,14 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import SelectSelector
+from homeassistant.helpers.selector import BooleanSelector, IconSelector, SelectSelector
 
 from .const import (
     CONF_CAPCODES,
     CONF_DISCIPLINES,
     CONF_GEMEENTEN,
     CONF_ICON,
+    CONF_PRIO1,
     CONF_REGIOS,
     DEFAULT_ICON,
     DEFAULT_NAME,
@@ -91,11 +92,21 @@ def _filter_allowed(values: list[str], allowed: set[str]) -> list[str]:
     return [value for value in values if value in allowed]
 
 
+def _to_bool(value: Any) -> bool:
+    """Normalize bool-ish config values."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
 def _normalize_config(config: dict[str, Any]) -> dict[str, Any]:
     """Normalize imported and UI config data."""
     normalized = dict(config)
     normalized[CONF_NAME] = normalized.get(CONF_NAME) or DEFAULT_NAME
     normalized[CONF_ICON] = normalized.get(CONF_ICON) or DEFAULT_ICON
+    normalized[CONF_PRIO1] = _to_bool(normalized.get(CONF_PRIO1, False))
 
     for key in TEXT_LIST_OPTIONS:
         normalized[key] = _value_to_list(normalized.get(key))
@@ -127,7 +138,7 @@ def _options_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_NAME, default=defaults[CONF_NAME]): cv.string,
-            vol.Optional(CONF_ICON, default=defaults[CONF_ICON]): cv.string,
+            vol.Optional(CONF_ICON, default=defaults[CONF_ICON]): IconSelector(),
             vol.Optional(
                 CONF_CAPCODES, default=_list_to_text(defaults[CONF_CAPCODES])
             ): cv.string,
@@ -140,6 +151,7 @@ def _options_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
             vol.Optional(
                 CONF_DISCIPLINES, default=defaults[CONF_DISCIPLINES]
             ): _multi_select(DISCIPLINE_OPTIONS),
+            vol.Optional(CONF_PRIO1, default=defaults[CONF_PRIO1]): BooleanSelector(),
         }
     )
 
