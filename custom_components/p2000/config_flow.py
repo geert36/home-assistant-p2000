@@ -159,7 +159,7 @@ def _options_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
 class P2000FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a P2000 config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     def async_get_options_flow(config_entry: config_entries.ConfigEntry):

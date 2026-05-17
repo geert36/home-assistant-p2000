@@ -1,25 +1,33 @@
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
-from typing import Optional, Dict, Any
+from typing import Any
+from urllib.parse import quote
 
 import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class P2000Api:
+    """Client for the P2000 API."""
+
     url = "https://beta.alarmeringdroid.nl/api2/find/"
 
-    def __init__(self, session: aiohttp.ClientSession):
+    def __init__(self, session: aiohttp.ClientSession) -> None:
+        """Initialize the API client."""
         self.session = session
 
     async def get_data(
         self,
-        api_filter: Dict[str, Any],
+        api_filter: dict[str, Any],
         retries: int = 3,
         timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:
-        query_string = json.dumps(api_filter)
+    ) -> dict[str, Any] | None:
+        """Fetch the latest P2000 notification."""
+        query_string = quote(json.dumps(api_filter, separators=(",", ":")), safe="")
         url = f"{self.url}{query_string}"
 
         client_timeout = aiohttp.ClientTimeout(total=timeout)
@@ -38,7 +46,6 @@ class P2000Api:
                     allow_redirects=False,
                     timeout=client_timeout,
                 ) as response:
-                
                     if response.status >= 400:
                         if response.status in (408, 429) or response.status >= 500:
                             raise aiohttp.ClientResponseError(
@@ -49,16 +56,12 @@ class P2000Api:
                             )
                         _LOGGER.error("Non-retryable HTTP error: %s", response.status)
                         return None
-                
+
                     try:
-                        text = await response.text()  # <-- hier haakjes + await
-                        data = json.loads(text)
-                    except json.JSONDecodeError as err:
-                        _LOGGER.error(
-                            "JSON decode failed at pos %s: %s",
-                            err.pos,
-                            err.msg,
-                        )
+                        data = await response.json(content_type=None)
+                    except (aiohttp.ContentTypeError, json.JSONDecodeError) as err:
+                        text = await response.text()
+                        _LOGGER.error("JSON decode failed: %s", err)
                         _LOGGER.debug("Raw response (first 500 chars): %s", text[:500])
                         return None
 
@@ -71,10 +74,9 @@ class P2000Api:
                     if not isinstance(result, dict):
                         return None
 
-                    # Rename lat & lon safely
-                    if "lat" in result:
+                    if "lat" in result and "latitude" not in result:
                         result["latitude"] = result.pop("lat")
-                    if "lon" in result:
+                    if "lon" in result and "longitude" not in result:
                         result["longitude"] = result.pop("lon")
 
                     return result
@@ -86,15 +88,14 @@ class P2000Api:
                     retries,
                 )
 
-            except aiohttp.ClientError as e:
+            except aiohttp.ClientError as err:
                 _LOGGER.warning(
                     "API client error (attempt %s/%s): %s",
                     attempt,
                     retries,
-                    e,
+                    err,
                 )
 
-            # Exponential backoff
             if attempt < retries:
                 sleep_time = attempt * 2
                 _LOGGER.debug("Retrying in %s seconds", sleep_time)

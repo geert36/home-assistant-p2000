@@ -1,0 +1,40 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - config_flow
+      - config-flow-selectors
+      - optimalizations
+    tags:
+      - "v*"
+      - "[0-9]*"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_test.txt
+
+      - name: Validate manifest version
+        run: python scripts/validate_manifest_version.py
+
+      - name: Compile integration
+        run: python -m compileall custom_components/p2000
+
+      - name: Run tests
+        run: pytest

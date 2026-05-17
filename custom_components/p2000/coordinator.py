@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
@@ -10,6 +12,7 @@ from homeassistant.helpers.update_coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class P2000DataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator to manage fetching P2000 data."""
 
@@ -17,9 +20,10 @@ class P2000DataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         api: Any,
-        api_filter: Dict[str, Any],
+        api_filter: dict[str, Any],
         update_interval: int = 30,
     ) -> None:
+        """Initialize the update coordinator."""
         self.api = api
         self.api_filter = api_filter
 
@@ -30,7 +34,7 @@ class P2000DataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=update_interval),
         )
 
-    async def _async_update_data(self) -> Dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API and handle exceptions."""
         try:
             _LOGGER.debug(
@@ -41,7 +45,8 @@ class P2000DataUpdateCoordinator(DataUpdateCoordinator):
             result = await self.api.get_data(self.api_filter)
 
             if not result:
-                return {}
+                _LOGGER.debug("No new P2000 data returned, keeping last known state")
+                return self.data or {}
 
             return result
 
