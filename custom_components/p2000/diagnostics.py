@@ -3,10 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.json import JSONEncoder
 
 from .const import CONF_CAPCODES, CONF_GEMEENTEN, DOMAIN
 
@@ -15,11 +14,7 @@ TO_REDACT = {CONF_CAPCODES, CONF_GEMEENTEN}
 
 def _redact_data(data: dict[str, Any]) -> dict[str, Any]:
     """Redact user-specific filter values from diagnostics."""
-    redacted = dict(data)
-    for key in TO_REDACT:
-        if key in redacted:
-            redacted[key] = "**REDACTED**"
-    return redacted
+    return async_redact_data(data, TO_REDACT)
 
 
 async def async_get_config_entry_diagnostics(
