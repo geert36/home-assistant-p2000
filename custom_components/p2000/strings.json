@@ -11,7 +11,7 @@
           "gemeenten": "Gemeenten",
           "regios": "Regio's",
           "disciplines": "Disciplines",
-          "prio1": "Alleen prio 1"
+          "prio1": "Toon alleen prio 1 meldingen"
         },
         "data_description": {
           "capcodes": "Een of meer capcodes, gescheiden met komma's of nieuwe regels.",
@@ -38,7 +38,7 @@
           "gemeenten": "Gemeenten",
           "regios": "Regio's",
           "disciplines": "Disciplines",
-          "prio1": "Alleen prio 1"
+          "prio1": "Toon alleen prio 1 meldingen"
         },
         "data_description": {
           "capcodes": "Een of meer capcodes, gescheiden met komma's of nieuwe regels.",
