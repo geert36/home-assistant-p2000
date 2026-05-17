@@ -43,6 +43,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+def _to_float(value: Any) -> float | None:
+    """Convert API coordinates to floats, accepting comma decimals."""
+    if value in (None, ""):
+        return None
+    if isinstance(value, str):
+        value = value.strip().replace(",", ".")
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: Dict[str, Any],
@@ -152,11 +164,7 @@ class P2000Sensor(CoordinatorEntity, SensorEntity):
             for c in capcodes
         )
 
-        try:
-            attrs["latitude"] = float(data.get("latitude"))
-            attrs["longitude"] = float(data.get("longitude"))
-        except (TypeError, ValueError):
-            attrs["latitude"] = None
-            attrs["longitude"] = None
+        attrs["latitude"] = _to_float(data.get("latitude"))
+        attrs["longitude"] = _to_float(data.get("longitude"))
 
         return attrs
