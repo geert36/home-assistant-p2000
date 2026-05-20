@@ -1,0 +1,54 @@
+{
+  "title": "P2000 Sensor",
+  "config": {
+    "step": {
+      "user": {
+        "title": "P2000",
+        "description": "Stel je P2000 sensor in.",
+        "data": {
+          "name": "Naam",
+          "icon": "Icoon",
+          "capcodes": "Capcodes",
+          "gemeenten": "Gemeenten",
+          "regios": "Regio's",
+          "disciplines": "Disciplines",
+          "prio1": "Toon alleen prio 1 meldingen"
+        },
+        "data_description": {
+          "capcodes": "Een of meer capcodes, gescheiden met komma's of nieuwe regels.",
+          "gemeenten": "Een of meer gemeenten, gescheiden met komma's of nieuwe regels.",
+          "regios": "Selecteer een of meer veiligheidsregio's.",
+          "disciplines": "Selecteer een of meer disciplines.",
+          "prio1": "Filter de meldingen op prio 1."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Deze P2000 sensor is al geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "P2000 opties",
+        "description": "Pas de P2000 sensor aan.",
+        "data": {
+          "name": "Naam",
+          "icon": "Icoon",
+          "capcodes": "Capcodes",
+          "gemeenten": "Gemeenten",
+          "regios": "Regio's",
+          "disciplines": "Disciplines",
+          "prio1": "Toon alleen prio 1 meldingen"
+        },
+        "data_description": {
+          "capcodes": "Een of meer capcodes, gescheiden met komma's of nieuwe regels.",
+          "gemeenten": "Een of meer gemeenten, gescheiden met komma's of nieuwe regels.",
+          "regios": "Selecteer een of meer veiligheidsregio's.",
+          "disciplines": "Selecteer een of meer disciplines.",
+          "prio1": "Filter de meldingen op prio 1."
+        }
+      }
+    }
+  }
+}
