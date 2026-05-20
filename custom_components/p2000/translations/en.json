@@ -1,0 +1,54 @@
+{
+  "title": "P2000 Sensor",
+  "config": {
+    "step": {
+      "user": {
+        "title": "P2000",
+        "description": "Configure your P2000 sensor.",
+        "data": {
+          "name": "Name",
+          "icon": "Icon",
+          "capcodes": "Capcodes",
+          "gemeenten": "Municipalities",
+          "regios": "Regions",
+          "disciplines": "Disciplines",
+          "prio1": "Show only priority 1 alerts"
+        },
+        "data_description": {
+          "capcodes": "One or more capcodes, separated by commas or new lines.",
+          "gemeenten": "One or more municipalities, separated by commas or new lines.",
+          "regios": "Select one or more safety regions.",
+          "disciplines": "Select one or more disciplines.",
+          "prio1": "Filter alerts to priority 1."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This P2000 sensor is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "P2000 options",
+        "description": "Adjust the P2000 sensor.",
+        "data": {
+          "name": "Name",
+          "icon": "Icon",
+          "capcodes": "Capcodes",
+          "gemeenten": "Municipalities",
+          "regios": "Regions",
+          "disciplines": "Disciplines",
+          "prio1": "Show only priority 1 alerts"
+        },
+        "data_description": {
+          "capcodes": "One or more capcodes, separated by commas or new lines.",
+          "gemeenten": "One or more municipalities, separated by commas or new lines.",
+          "regios": "Select one or more safety regions.",
+          "disciplines": "Select one or more disciplines.",
+          "prio1": "Filter alerts to priority 1."
+        }
+      }
+    }
+  }
+}
