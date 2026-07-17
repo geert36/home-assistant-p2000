@@ -12,14 +12,16 @@
           "gemeenten": "Municipalities",
           "regios": "Regions",
           "disciplines": "Disciplines",
-          "prio1": "Show only priority 1 alerts"
+          "prio1": "Show only priority 1 alerts",
+          "scan_interval": "Update interval"
         },
         "data_description": {
           "capcodes": "One or more capcodes, separated by commas or new lines.",
           "gemeenten": "One or more municipalities, separated by commas or new lines.",
           "regios": "Select one or more safety regions.",
           "disciplines": "Select one or more disciplines.",
-          "prio1": "Filter alerts to priority 1."
+          "prio1": "Filter alerts to priority 1.",
+          "scan_interval": "How often the API is polled, in seconds (minimum 10)."
         }
       }
     },
@@ -39,14 +41,16 @@
           "gemeenten": "Municipalities",
           "regios": "Regions",
           "disciplines": "Disciplines",
-          "prio1": "Show only priority 1 alerts"
+          "prio1": "Show only priority 1 alerts",
+          "scan_interval": "Update interval"
         },
         "data_description": {
           "capcodes": "One or more capcodes, separated by commas or new lines.",
           "gemeenten": "One or more municipalities, separated by commas or new lines.",
           "regios": "Select one or more safety regions.",
           "disciplines": "Select one or more disciplines.",
-          "prio1": "Filter alerts to priority 1."
+          "prio1": "Filter alerts to priority 1.",
+          "scan_interval": "How often the API is polled, in seconds (minimum 10)."
         }
       }
     }

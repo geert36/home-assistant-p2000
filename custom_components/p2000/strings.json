@@ -11,14 +11,16 @@
           "gemeenten": "Gemeenten",
           "regios": "Regio's",
           "disciplines": "Disciplines",
-          "prio1": "Toon alleen prio 1 meldingen"
+          "prio1": "Toon alleen prio 1 meldingen",
+          "scan_interval": "Update-interval"
         },
         "data_description": {
           "capcodes": "Een of meer capcodes, gescheiden met komma's of nieuwe regels.",
           "gemeenten": "Een of meer gemeenten, gescheiden met komma's of nieuwe regels.",
           "regios": "Selecteer een of meer veiligheidsregio's.",
           "disciplines": "Selecteer een of meer disciplines.",
-          "prio1": "Filter de meldingen op prio 1."
+          "prio1": "Filter de meldingen op prio 1.",
+          "scan_interval": "Hoe vaak de API wordt bevraagd, in seconden (minimaal 10)."
         }
       }
     },
@@ -38,14 +40,16 @@
           "gemeenten": "Gemeenten",
           "regios": "Regio's",
           "disciplines": "Disciplines",
-          "prio1": "Toon alleen prio 1 meldingen"
+          "prio1": "Toon alleen prio 1 meldingen",
+          "scan_interval": "Update-interval"
         },
         "data_description": {
           "capcodes": "Een of meer capcodes, gescheiden met komma's of nieuwe regels.",
           "gemeenten": "Een of meer gemeenten, gescheiden met komma's of nieuwe regels.",
           "regios": "Selecteer een of meer veiligheidsregio's.",
           "disciplines": "Selecteer een of meer disciplines.",
-          "prio1": "Filter de meldingen op prio 1."
+          "prio1": "Filter de meldingen op prio 1.",
+          "scan_interval": "Hoe vaak de API wordt bevraagd, in seconden (minimaal 10)."
         }
       }
     }

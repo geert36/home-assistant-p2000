@@ -1,13 +1,39 @@
 # P2000 Sensor
 
-This is a simple p2000 sensor for home assistant
+A simple P2000 (Dutch emergency services pager network) sensor for Home Assistant.
 
-### Installation
+The sensor state is the id of the latest notification (unique, changes with every new P2000 message). All details are available as attributes.
 
-Copy this folder to `<config_dir>/custom_components/p2000/`.
+## Installation
 
-Add the following to your `configuration.yaml` file:
+### HACS (custom repository)
 
+1. In HACS, add `https://github.com/geert36/home-assistant-p2000` as a custom repository (category: integration).
+2. Install **P2000 Sensor** and restart Home Assistant.
+
+### Manual
+
+Copy the `custom_components/p2000` folder to `<config_dir>/custom_components/p2000/` and restart Home Assistant.
+
+## Configuration
+
+Go to **Settings → Devices & Services → Add Integration** and search for **P2000**. You can configure everything from the UI:
+
+- **Naam / icoon** — name and icon of the sensor
+- **Capcodes** — one or more capcodes, comma separated
+- **Gemeenten** — one or more municipalities, comma separated
+- **Regio's** — one or more veiligheidsregio's (multi-select)
+- **Disciplines** — one or more disciplines (multi-select)
+- **Prio 1** — only show priority 1 notifications
+- **Update-interval** — how often the API is polled, in seconds (default 30)
+
+When applying multiple properties all will be applied as filter!
+
+All options can be changed later via the **Configure** button on the integration.
+
+### YAML (legacy)
+
+Existing YAML configuration is imported automatically into a config entry. Example:
 
 ```yaml
 # Example configuration.yaml entry
@@ -17,7 +43,7 @@ sensor:
     icon: mdi:fire-truck
     gemeenten:
       - Zwolle
-    diensten:
+    disciplines:
       - 2
 
   - platform: p2000
@@ -25,7 +51,7 @@ sensor:
     name: Ambulance
     gemeenten:
       - Zwolle
-    diensten:
+    disciplines:
       - 3
 
   - platform: p2000
@@ -40,9 +66,6 @@ sensor:
     regios:
       - 17
 ```
-
-
-When applying multiple properties all will be applied as filter!
 
 ###  regios (Veiligheidsregios)
 ```
@@ -72,7 +95,8 @@ When applying multiple properties all will be applied as filter!
 26: Midden- en West Brabant
 27: Flevoland
 ```
-## diensten
+
+## disciplines
 ```
 1: Politie
 2: Brandweer
@@ -81,18 +105,30 @@ When applying multiple properties all will be applied as filter!
 5: Lifeliner
 7: DARES
 ```
-## lifeliners
-```
-If `true`; All notifications, regardless of the region
-```
 
+## Attributes
 
-You should get a sensor like te following with a lot of attributes.
+| Attribute | Description |
+| --- | --- |
+| `melding` | Short notification text |
+| `tekstmelding` | Full notification text |
+| `dienst` | Discipline (Politie, Brandweer, Ambulance, ...) |
+| `regio` | Veiligheidsregio name |
+| `plaats` | City |
+| `postcode` | Postal code |
+| `straat` | Street |
+| `datum` | Date of the notification |
+| `tijd` | Time of the notification |
+| `prio1` | `true` when this is a priority 1 notification |
+| `brandinfo` | Fire information (if applicable) |
+| `grip` | GRIP level (if applicable) |
+| `capcodes` | List of capcodes with descriptions |
+| `capcodes_str` | Capcodes as a single readable string |
+| `latitude` / `longitude` | Coordinates of the notification |
 
-The id is unique and changes with every new p2000 message.
+You should get a sensor like the following with a lot of attributes.
 
-
-![Tux, the Linux mascot](./assets/screenshot01.png)
+![P2000 sensor attributes](./assets/screenshot01.png)
 
 Extracting data can be done with a template like:
 
@@ -127,7 +163,7 @@ content: >
 
   Regio : {{ state_attr('sensor.p2000', 'regio') }}
 
-  capcode : {{ state_attr('sensor.p2000', 'capstring') }}
+  capcode : {{ state_attr('sensor.p2000', 'capcodes_str') }}
 
   lat : {{ state_attr('sensor.p2000', 'latitude') }}  long: {{
   state_attr('sensor.p2000', 'longitude') }}
@@ -138,15 +174,12 @@ content: >
 
   info :  {{ state_attr('sensor.p2000', 'brandinfo') }}<br>
 
-  Regio id : {{ state_attr('sensor.p2000', 'regioid') }}       Dienst id : {{
-  state_attr('sensor.p2000', 'dienstid') }}
-
   Prio : {{ state_attr('sensor.p2000', 'prio1') }}
 
   Grip : {{ state_attr('sensor.p2000', 'grip') }}
 
 
-  Id nr : {{ state_attr('sensor.p2000', 'id') }}<br>
+  Id nr : {{ states('sensor.p2000') }}<br>
 ```
 ----------------------------------------------------------------------------------
 Also <br>
