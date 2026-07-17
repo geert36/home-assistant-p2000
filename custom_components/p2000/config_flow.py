@@ -1,14 +1,20 @@
 """Config flow for P2000 integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import BooleanSelector, IconSelector, SelectSelector
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    IconSelector,
+    NumberSelector,
+    SelectSelector,
+)
 
 from .const import (
     CONF_CAPCODES,
@@ -19,7 +25,10 @@ from .const import (
     CONF_REGIOS,
     DEFAULT_ICON,
     DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    MAX_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,12 +110,26 @@ def _to_bool(value: Any) -> bool:
     return bool(value)
 
 
+def _to_scan_interval(value: Any) -> int:
+    """Normalize the scan interval to a bounded number of seconds."""
+    if isinstance(value, timedelta):
+        value = value.total_seconds()
+    try:
+        seconds = int(float(str(value).strip()))
+    except (TypeError, ValueError):
+        return DEFAULT_SCAN_INTERVAL
+    return max(MIN_SCAN_INTERVAL, min(MAX_SCAN_INTERVAL, seconds))
+
+
 def _normalize_config(config: dict[str, Any]) -> dict[str, Any]:
     """Normalize imported and UI config data."""
     normalized = dict(config)
     normalized[CONF_NAME] = normalized.get(CONF_NAME) or DEFAULT_NAME
     normalized[CONF_ICON] = normalized.get(CONF_ICON) or DEFAULT_ICON
     normalized[CONF_PRIO1] = _to_bool(normalized.get(CONF_PRIO1, False))
+    normalized[CONF_SCAN_INTERVAL] = _to_scan_interval(
+        normalized.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    )
 
     for key in TEXT_LIST_OPTIONS:
         normalized[key] = _value_to_list(normalized.get(key))
@@ -152,6 +175,17 @@ def _options_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
                 CONF_DISCIPLINES, default=defaults[CONF_DISCIPLINES]
             ): _multi_select(DISCIPLINE_OPTIONS),
             vol.Optional(CONF_PRIO1, default=defaults[CONF_PRIO1]): BooleanSelector(),
+            vol.Optional(
+                CONF_SCAN_INTERVAL, default=defaults[CONF_SCAN_INTERVAL]
+            ): NumberSelector(
+                {
+                    "min": MIN_SCAN_INTERVAL,
+                    "max": MAX_SCAN_INTERVAL,
+                    "step": 1,
+                    "unit_of_measurement": "s",
+                    "mode": "box",
+                }
+            ),
         }
     )
 

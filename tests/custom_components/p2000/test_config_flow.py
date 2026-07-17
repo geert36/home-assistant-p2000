@@ -1,8 +1,10 @@
 """Tests for the P2000 config flow helpers."""
 
-from homeassistant.const import CONF_NAME
+from datetime import timedelta
 
-from custom_components.p2000.config_flow import _normalize_config
+from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL
+
+from custom_components.p2000.config_flow import _normalize_config, _to_scan_interval
 from custom_components.p2000.const import (
     CONF_CAPCODES,
     CONF_DISCIPLINES,
@@ -11,6 +13,9 @@ from custom_components.p2000.const import (
     CONF_PRIO1,
     CONF_REGIOS,
     DEFAULT_ICON,
+    DEFAULT_SCAN_INTERVAL,
+    MAX_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
 )
 
 
@@ -46,3 +51,16 @@ def test_normalize_config_applies_defaults() -> None:
     assert result[CONF_REGIOS] == []
     assert result[CONF_DISCIPLINES] == []
     assert result[CONF_PRIO1] is False
+    assert result[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+
+
+def test_to_scan_interval_normalizes_and_clamps() -> None:
+    """Test scan interval accepts numbers, strings, and timedeltas."""
+    assert _to_scan_interval(60) == 60
+    assert _to_scan_interval("45") == 45
+    assert _to_scan_interval(45.7) == 45
+    assert _to_scan_interval(timedelta(minutes=2)) == 120
+    assert _to_scan_interval(1) == MIN_SCAN_INTERVAL
+    assert _to_scan_interval(999999) == MAX_SCAN_INTERVAL
+    assert _to_scan_interval(None) == DEFAULT_SCAN_INTERVAL
+    assert _to_scan_interval("not-a-number") == DEFAULT_SCAN_INTERVAL

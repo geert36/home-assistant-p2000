@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -25,6 +25,7 @@ from .const import (
     CONF_REGIOS,
     DEFAULT_ICON,
     DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 
@@ -53,6 +54,13 @@ def _to_float(value: Any) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _parse_prio1(value: Any) -> bool:
+    """Interpret the prio1 field, which the API may send as int, str, or bool."""
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"1", "true", "yes"}
 
 
 async def async_setup_platform(
@@ -93,11 +101,16 @@ async def async_setup_entry(
     _LOGGER.info("P2000 filter being used: %s", api_filter)
     session = async_get_clientsession(hass)
     api = P2000Api(session)
+    try:
+        scan_interval = int(config.get(CONF_SCAN_INTERVAL) or DEFAULT_SCAN_INTERVAL)
+    except (TypeError, ValueError):
+        scan_interval = DEFAULT_SCAN_INTERVAL
+
     coordinator = P2000DataUpdateCoordinator(
         hass=hass,
         api=api,
         api_filter=api_filter,
-        update_interval=30,
+        update_interval=scan_interval,
     )
 
     await coordinator.async_config_entry_first_refresh()
@@ -153,15 +166,16 @@ class P2000Sensor(CoordinatorEntity, SensorEntity):
         attrs["straat"] = data.get("straat")
         attrs["datum"] = data.get("datum")
         attrs["tijd"] = data.get("tijd")
-        attrs["prio1"] = str(data.get("prio1")) == "1"
+        attrs["prio1"] = _parse_prio1(data.get("prio1"))
         attrs["brandinfo"] = data.get("brandinfo", "Onbekend")
         attrs["grip"] = data.get("grip")
 
-        capcodes = data.get("capcodes", [])
+        capcodes = data.get("capcodes") or []
         attrs["capcodes"] = capcodes
         attrs["capcodes_str"] = ", ".join(
             f"{c.get('capcode')} ({c.get('omschrijving')})"
             for c in capcodes
+            if isinstance(c, dict)
         )
 
         attrs["latitude"] = _to_float(data.get("latitude"))

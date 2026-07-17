@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, Platform
+from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -16,6 +16,7 @@ from .const import (
     CONF_REGIOS,
     DEFAULT_ICON,
     DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
 )
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -68,6 +69,7 @@ def _migrate_mapping(values: dict[str, Any]) -> dict[str, Any]:
     migrated[CONF_REGIOS] = _value_to_list(migrated.get(CONF_REGIOS))
     migrated[CONF_DISCIPLINES] = _value_to_list(migrated.get(CONF_DISCIPLINES))
     migrated[CONF_PRIO1] = _to_bool(migrated.get(CONF_PRIO1, False))
+    migrated.setdefault(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     return migrated
 
 

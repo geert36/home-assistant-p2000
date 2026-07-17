@@ -10,6 +10,12 @@ import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
 
+USER_AGENT = "home-assistant-p2000 (https://github.com/geert36/home-assistant-p2000)"
+
+
+class P2000ApiError(Exception):
+    """Raised when the P2000 API request fails."""
+
 
 class P2000Api:
     """Client for the P2000 API."""
@@ -26,7 +32,11 @@ class P2000Api:
         retries: int = 3,
         timeout: int = 10,
     ) -> dict[str, Any] | None:
-        """Fetch the latest P2000 notification."""
+        """Fetch the latest P2000 notification.
+
+        Returns None when there are no notifications for the filter.
+        Raises P2000ApiError when the request ultimately fails.
+        """
         query_string = quote(json.dumps(api_filter, separators=(",", ":")), safe="")
         url = f"{self.url}{query_string}"
 
@@ -45,6 +55,7 @@ class P2000Api:
                     url,
                     allow_redirects=False,
                     timeout=client_timeout,
+                    headers={"User-Agent": USER_AGENT},
                 ) as response:
                     if response.status >= 400:
                         if response.status in (408, 429) or response.status >= 500:
@@ -54,16 +65,16 @@ class P2000Api:
                                 status=response.status,
                                 message="Retryable HTTP error",
                             )
-                        _LOGGER.error("Non-retryable HTTP error: %s", response.status)
-                        return None
+                        raise P2000ApiError(
+                            f"Non-retryable HTTP error: {response.status}"
+                        )
 
                     try:
                         data = await response.json(content_type=None)
                     except (aiohttp.ContentTypeError, json.JSONDecodeError) as err:
                         text = await response.text()
-                        _LOGGER.error("JSON decode failed: %s", err)
                         _LOGGER.debug("Raw response (first 500 chars): %s", text[:500])
-                        return None
+                        raise P2000ApiError(f"JSON decode failed: {err}") from err
 
                     meldingen = data.get("meldingen")
                     if not meldingen:
@@ -101,5 +112,4 @@ class P2000Api:
                 _LOGGER.debug("Retrying in %s seconds", sleep_time)
                 await asyncio.sleep(sleep_time)
 
-        _LOGGER.error("API request failed after %s attempts", retries)
-        return None
+        raise P2000ApiError(f"API request failed after {retries} attempts")

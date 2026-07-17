@@ -10,6 +10,8 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
+from .api import P2000ApiError
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -36,21 +38,18 @@ class P2000DataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API and handle exceptions."""
+        _LOGGER.debug(
+            "Fetching P2000 data with filter: %s",
+            self.api_filter,
+        )
+
         try:
-            _LOGGER.debug(
-                "Fetching P2000 data with filter: %s",
-                self.api_filter,
-            )
-
             result = await self.api.get_data(self.api_filter)
+        except P2000ApiError as err:
+            raise UpdateFailed(f"P2000 API request failed: {err}") from err
 
-            if not result:
-                _LOGGER.debug("No new P2000 data returned, keeping last known state")
-                return self.data or {}
+        if not result:
+            _LOGGER.debug("No notifications for this filter, keeping last known state")
+            return self.data or {}
 
-            return result
-
-        except Exception as err:
-            raise UpdateFailed(
-                f"P2000 API request failed: {err}"
-            ) from err
+        return result
