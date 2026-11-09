@@ -125,6 +125,7 @@ sensor:
 | `capcodes` | List of capcodes with descriptions |
 | `capcodes_str` | Capcodes as a single readable string |
 | `latitude` / `longitude` | Coordinates of the notification |
+| `last_update_success` | `false` when the last API poll failed; the other attributes then hold the last known notification (possibly outdated) |
 
 You should get a sensor like the following with a lot of attributes.
 
