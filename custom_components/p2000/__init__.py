@@ -1,12 +1,15 @@
 """The p2000 sensor integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .api import P2000Api
 from .const import (
     CONF_CAPCODES,
     CONF_DISCIPLINES,
@@ -17,14 +20,55 @@ from .const import (
     DEFAULT_ICON,
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
 )
+from .coordinator import P2000DataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.EVENT]
 CURRENT_CONFIG_ENTRY_VERSION = 2
+
+
+def _build_api_filter(config: dict[str, Any]) -> dict[str, Any]:
+    """Translate the stored configuration into an API filter."""
+    api_filter: dict[str, Any] = {}
+    if config.get(CONF_GEMEENTEN):
+        api_filter["gemeenten"] = config[CONF_GEMEENTEN]
+    if config.get(CONF_CAPCODES):
+        api_filter["capcodes"] = config[CONF_CAPCODES]
+    if config.get(CONF_REGIOS):
+        api_filter["regios"] = config[CONF_REGIOS]
+    if config.get(CONF_DISCIPLINES):
+        api_filter["disciplines"] = config[CONF_DISCIPLINES]
+    if config.get(CONF_PRIO1):
+        api_filter["prio1"] = True
+    return api_filter
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up P2000 from a config entry."""
+    config = {**entry.data, **entry.options}
+
+    api_filter = _build_api_filter(config)
+    _LOGGER.info("P2000 filter being used: %s", api_filter)
+
+    try:
+        scan_interval = int(config.get(CONF_SCAN_INTERVAL) or DEFAULT_SCAN_INTERVAL)
+    except (TypeError, ValueError):
+        scan_interval = DEFAULT_SCAN_INTERVAL
+
+    coordinator = P2000DataUpdateCoordinator(
+        hass=hass,
+        config_entry=entry,
+        api=P2000Api(async_get_clientsession(hass)),
+        api_filter=api_filter,
+        update_interval=scan_interval,
+    )
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
@@ -32,7 +76,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a P2000 config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unloaded:
+        hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+    return unloaded
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

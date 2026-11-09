@@ -17,6 +17,14 @@ class P2000ApiError(Exception):
     """Raised when the P2000 API request fails."""
 
 
+def _normalize_coordinates(melding: dict[str, Any]) -> None:
+    """Rename the API's lat/lon keys to latitude/longitude, in place."""
+    if "lat" in melding and "latitude" not in melding:
+        melding["latitude"] = melding.pop("lat")
+    if "lon" in melding and "longitude" not in melding:
+        melding["longitude"] = melding.pop("lon")
+
+
 class P2000Api:
     """Client for the P2000 API."""
 
@@ -26,15 +34,18 @@ class P2000Api:
         """Initialize the API client."""
         self.session = session
 
-    async def get_data(
+    async def get_meldingen(
         self,
         api_filter: dict[str, Any],
         retries: int = 3,
         timeout: int = 10,
-    ) -> dict[str, Any] | None:
-        """Fetch the latest P2000 notification.
+    ) -> list[dict[str, Any]]:
+        """Fetch the recent P2000 notifications, most recent activity first.
 
-        Returns None when there are no notifications for the filter.
+        Each item is a group: the first message of an incident, with later
+        pager messages for the same incident in ``subitems``.
+
+        Returns an empty list when there are no notifications for the filter.
         Raises P2000ApiError when the request ultimately fails.
         """
         query_string = quote(json.dumps(api_filter, separators=(",", ":")), safe="")
@@ -76,21 +87,24 @@ class P2000Api:
                         _LOGGER.debug("Raw response (first 500 chars): %s", text[:500])
                         raise P2000ApiError(f"JSON decode failed: {err}") from err
 
+                    if not isinstance(data, dict):
+                        raise P2000ApiError(
+                            f"Unexpected API response type: {type(data).__name__}"
+                        )
+
                     meldingen = data.get("meldingen")
-                    if not meldingen:
+                    if not isinstance(meldingen, list) or not meldingen:
                         _LOGGER.debug("No notifications found in API response.")
-                        return None
+                        return []
 
-                    result = meldingen[0] if isinstance(meldingen, list) else None
-                    if not isinstance(result, dict):
-                        return None
+                    groups = [item for item in meldingen if isinstance(item, dict)]
+                    for group in groups:
+                        _normalize_coordinates(group)
+                        for sub in group.get("subitems") or []:
+                            if isinstance(sub, dict):
+                                _normalize_coordinates(sub)
 
-                    if "lat" in result and "latitude" not in result:
-                        result["latitude"] = result.pop("lat")
-                    if "lon" in result and "longitude" not in result:
-                        result["longitude"] = result.pop("lon")
-
-                    return result
+                    return groups
 
             except asyncio.TimeoutError:
                 _LOGGER.warning(

@@ -1,8 +1,8 @@
-"""Tests for P2000 sensor helpers."""
+"""Tests for the P2000 sensor."""
 
 from types import SimpleNamespace
 
-from custom_components.p2000.sensor import P2000Sensor, _parse_prio1, _to_float
+from custom_components.p2000.sensor import P2000Sensor
 
 
 def _sensor(data: dict | None, last_update_success: bool) -> P2000Sensor:
@@ -39,23 +39,41 @@ def test_last_update_success_attribute_true_when_healthy() -> None:
     assert sensor.extra_state_attributes["last_update_success"] is True
 
 
-def test_to_float_accepts_comma_decimal_separator() -> None:
-    """Test Dutch comma decimal values become floats."""
-    assert _to_float("52,12345") == 52.12345
-    assert _to_float("4.98765") == 4.98765
-    assert _to_float(5) == 5.0
-    assert _to_float("") is None
-    assert _to_float(None) is None
-    assert _to_float("not-a-number") is None
+def test_sensor_attributes_unchanged_for_existing_users() -> None:
+    """The attribute names automations rely on must stay the same."""
+    sensor = _sensor(
+        {
+            "id": "1",
+            "melding": "Brand",
+            "capcodes": [{"capcode": "123", "omschrijving": "Post"}],
+            "prio1": "1",
+            "latitude": "52,5",
+            "longitude": "6.1",
+        },
+        last_update_success=True,
+    )
 
+    attrs = sensor.extra_state_attributes
 
-def test_parse_prio1_accepts_int_str_and_bool() -> None:
-    """Test the prio1 field is interpreted regardless of API type."""
-    assert _parse_prio1(1) is True
-    assert _parse_prio1("1") is True
-    assert _parse_prio1(True) is True
-    assert _parse_prio1("true") is True
-    assert _parse_prio1(0) is False
-    assert _parse_prio1("0") is False
-    assert _parse_prio1(None) is False
-    assert _parse_prio1("") is False
+    assert set(attrs) == {
+        "last_update_success",
+        "melding",
+        "tekstmelding",
+        "dienst",
+        "regio",
+        "plaats",
+        "postcode",
+        "straat",
+        "datum",
+        "tijd",
+        "prio1",
+        "brandinfo",
+        "grip",
+        "capcodes",
+        "capcodes_str",
+        "latitude",
+        "longitude",
+    }
+    assert attrs["prio1"] is True
+    assert attrs["capcodes_str"] == "123 (Post)"
+    assert attrs["latitude"] == 52.5

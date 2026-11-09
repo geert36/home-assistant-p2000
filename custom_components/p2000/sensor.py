@@ -7,14 +7,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import P2000Api
 from .coordinator import P2000DataUpdateCoordinator
 from .const import (
     CONF_CAPCODES,
@@ -25,9 +23,9 @@ from .const import (
     CONF_REGIOS,
     DEFAULT_ICON,
     DEFAULT_NAME,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from .melding import melding_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,25 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRIO1, default=False): cv.boolean,
     }
 )
-
-
-def _to_float(value: Any) -> float | None:
-    """Convert API coordinates to floats, accepting comma decimals."""
-    if value in (None, ""):
-        return None
-    if isinstance(value, str):
-        value = value.strip().replace(",", ".")
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def _parse_prio1(value: Any) -> bool:
-    """Interpret the prio1 field, which the API may send as int, str, or bool."""
-    if isinstance(value, bool):
-        return value
-    return str(value).strip().lower() in {"1", "true", "yes"}
 
 
 async def async_setup_platform(
@@ -85,35 +64,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up P2000 sensor from a config entry."""
     config = {**entry.data, **entry.options}
-
-    api_filter: Dict[str, Any] = {}
-    if config.get(CONF_GEMEENTEN):
-        api_filter["gemeenten"] = config[CONF_GEMEENTEN]
-    if config.get(CONF_CAPCODES):
-        api_filter["capcodes"] = config[CONF_CAPCODES]
-    if config.get(CONF_REGIOS):
-        api_filter["regios"] = config[CONF_REGIOS]
-    if config.get(CONF_DISCIPLINES):
-        api_filter["disciplines"] = config[CONF_DISCIPLINES]
-    if config.get(CONF_PRIO1):
-        api_filter["prio1"] = True
-
-    _LOGGER.info("P2000 filter being used: %s", api_filter)
-    session = async_get_clientsession(hass)
-    api = P2000Api(session)
-    try:
-        scan_interval = int(config.get(CONF_SCAN_INTERVAL) or DEFAULT_SCAN_INTERVAL)
-    except (TypeError, ValueError):
-        scan_interval = DEFAULT_SCAN_INTERVAL
-
-    coordinator = P2000DataUpdateCoordinator(
-        hass=hass,
-        api=api,
-        api_filter=api_filter,
-        update_interval=scan_interval,
-    )
-
-    await coordinator.async_config_entry_first_refresh()
+    coordinator: P2000DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities([
         P2000Sensor(
@@ -163,30 +114,7 @@ class P2000Sensor(CoordinatorEntity, SensorEntity):
         if not data:
             return {}
 
-        attrs: Dict[str, Any] = {}
-        attrs["last_update_success"] = self.coordinator.last_update_success
-        attrs["melding"] = data.get("melding")
-        attrs["tekstmelding"] = data.get("tekstmelding")
-        attrs["dienst"] = data.get("dienst", "Onbekend")
-        attrs["regio"] = data.get("regio", "Onbekend")
-        attrs["plaats"] = data.get("plaats")
-        attrs["postcode"] = data.get("postcode", "Onbekend")
-        attrs["straat"] = data.get("straat")
-        attrs["datum"] = data.get("datum")
-        attrs["tijd"] = data.get("tijd")
-        attrs["prio1"] = _parse_prio1(data.get("prio1"))
-        attrs["brandinfo"] = data.get("brandinfo", "Onbekend")
-        attrs["grip"] = data.get("grip")
-
-        capcodes = data.get("capcodes") or []
-        attrs["capcodes"] = capcodes
-        attrs["capcodes_str"] = ", ".join(
-            f"{c.get('capcode')} ({c.get('omschrijving')})"
-            for c in capcodes
-            if isinstance(c, dict)
-        )
-
-        attrs["latitude"] = _to_float(data.get("latitude"))
-        attrs["longitude"] = _to_float(data.get("longitude"))
-
-        return attrs
+        return {
+            "last_update_success": self.coordinator.last_update_success,
+            **melding_attributes(data),
+        }

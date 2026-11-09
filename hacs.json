@@ -1,3 +1,4 @@
 {
-  "name": "P2000 Sensor"
+  "name": "P2000 Sensor",
+  "homeassistant": "2024.11.0"
 }
