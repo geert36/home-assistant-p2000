@@ -153,13 +153,34 @@ Why use it instead of triggering on the sensor?
 - The sensor shows the incident that was most recently active. When a follow-up arrives for an older incident, the sensor switches back to that older melding, which makes an automation on the sensor fire again for a melding you already handled. The event entity reports each message exactly once.
 - Meldingen that exist when Home Assistant starts (or when you change the options) are not reported as new. At most 10 events are fired per update, so an outage cannot flood your notifications.
 
+On Home Assistant 2026.7 or newer, use the `event.received` trigger. It only fires for the event types you pick, and it ignores the entity becoming `unavailable` or `unknown`, so nothing fires when Home Assistant starts or the integration reloads. Add `vervolgmelding` to the list to be notified of follow-up messages too.
+
+```yaml
+automation:
+  - alias: P2000 melding
+    triggers:
+      - trigger: event.received
+        target:
+          entity_id: event.brandweer_melding
+        options:
+          event_type:
+            - melding
+    actions:
+      - action: notify.notify
+        data:
+          title: "{{ trigger.to_state.attributes.dienst }}"
+          message: "{{ trigger.to_state.attributes.melding }}"
+```
+
+On older versions, use a state trigger. Only exclude `unavailable` as the previous state, not `unknown`: an event entity that has not fired yet is `unknown`, so excluding it would skip the first melding after you set it up. Remove the condition to also be notified of follow-up messages.
+
 ```yaml
 automation:
   - alias: P2000 melding
     triggers:
       - trigger: state
         entity_id: event.brandweer_melding
-        not_from: [unavailable, unknown]
+        not_from: unavailable
     conditions:
       - condition: template
         value_template: "{{ trigger.to_state.attributes.event_type == 'melding' }}"
@@ -170,7 +191,7 @@ automation:
           message: "{{ trigger.to_state.attributes.melding }}"
 ```
 
-Remove the condition to also be notified of follow-up messages. The sensor itself works exactly as before, so existing automations keep working.
+The sensor itself works exactly as before, so existing automations keep working.
 
 ----------------------------------------------------------------------------------
 ### lovelace Dashboard
