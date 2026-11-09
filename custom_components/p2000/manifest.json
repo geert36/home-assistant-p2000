@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/geert36/home-assistant-p2000/issues",
   "requirements": [],
-  "version": "1.0.5"
+  "version": "1.0.6"
 }

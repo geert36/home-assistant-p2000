@@ -142,6 +142,13 @@ class P2000Sensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"p2000_{entry_id}"
 
     @property
+    def available(self) -> bool:
+        """Stay available on transient API failures while a last known melding exists."""
+        if self.coordinator.data:
+            return True
+        return super().available
+
+    @property
     def native_value(self) -> str | None:
         """Return the sensor state."""
         data = self.coordinator.data
@@ -157,6 +164,7 @@ class P2000Sensor(CoordinatorEntity, SensorEntity):
             return {}
 
         attrs: Dict[str, Any] = {}
+        attrs["last_update_success"] = self.coordinator.last_update_success
         attrs["melding"] = data.get("melding")
         attrs["tekstmelding"] = data.get("tekstmelding")
         attrs["dienst"] = data.get("dienst", "Onbekend")
