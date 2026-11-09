@@ -135,6 +135,41 @@ Extracting data can be done with a template like:
 
 `{{ state_attr('sensor.p2000_zwolle', 'melding') }}`
 
+## Event entity (recommended for automations)
+
+Besides the sensor, every entry also creates an **event entity** (for a sensor named `Brandweer` this is `event.brandweer_melding`). It fires **once for every new P2000 message**:
+
+| Event type | When |
+| --- | --- |
+| `melding` | A new incident (the first message) |
+| `vervolgmelding` | A follow-up message for an incident you already received, for example when more units are alerted. `parent_id` is the id of the first message |
+
+The event carries the same attributes as the sensor (`melding`, `tekstmelding`, `plaats`, `capcodes_str`, ...) plus `id` and `parent_id`.
+
+Why use it instead of triggering on the sensor?
+- Two meldingen within one poll are both reported (the sensor only shows one).
+- The sensor shows the incident that was most recently active. When a follow-up arrives for an older incident, the sensor switches back to that older melding, which makes an automation on the sensor fire again for a melding you already handled. The event entity reports each message exactly once.
+- Meldingen that exist when Home Assistant starts (or when you change the options) are not reported as new. At most 10 events are fired per update, so an outage cannot flood your notifications.
+
+```yaml
+automation:
+  - alias: P2000 melding
+    triggers:
+      - trigger: state
+        entity_id: event.brandweer_melding
+        not_from: [unavailable, unknown]
+    conditions:
+      - condition: template
+        value_template: "{{ trigger.to_state.attributes.event_type == 'melding' }}"
+    actions:
+      - action: notify.notify
+        data:
+          title: "{{ trigger.to_state.attributes.dienst }}"
+          message: "{{ trigger.to_state.attributes.melding }}"
+```
+
+Remove the condition to also be notified of follow-up messages. The sensor itself works exactly as before, so existing automations keep working.
+
 ----------------------------------------------------------------------------------
 ### lovelace Dashboard
 
