@@ -20,9 +20,8 @@ from .const import (
     DEFAULT_ICON,
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
 )
-from .coordinator import P2000DataUpdateCoordinator
+from .coordinator import P2000ConfigEntry, P2000DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ def _build_api_filter(config: dict[str, Any]) -> dict[str, Any]:
     return api_filter
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: P2000ConfigEntry) -> bool:
     """Set up P2000 from a config entry."""
     config = {**entry.data, **entry.options}
 
@@ -67,22 +66,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: P2000ConfigEntry) -> bool:
     """Unload a P2000 config entry."""
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unloaded:
-        hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
-    return unloaded
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: P2000ConfigEntry) -> None:
     """Reload P2000 after options changed."""
     await hass.config_entries.async_reload(entry.entry_id)
 

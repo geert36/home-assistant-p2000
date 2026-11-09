@@ -31,9 +31,11 @@ When applying multiple properties all will be applied as filter!
 
 All options can be changed later via the **Configure** button on the integration.
 
+Every entry creates one device (named after the sensor) that contains the sensor and the event entity. The **Download diagnostics** button on the integration includes the last melding and the update status; filters, addresses, coordinates, capcodes and the melding text are redacted.
+
 ### YAML (legacy)
 
-Existing YAML configuration is imported automatically into a config entry. Example:
+Existing YAML configuration is imported automatically into a config entry. After the import the YAML is no longer used: Home Assistant shows a notice under **Settings → Repairs** until you remove the `platform: p2000` entries from `configuration.yaml`. Example:
 
 ```yaml
 # Example configuration.yaml entry

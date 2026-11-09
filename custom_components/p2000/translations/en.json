@@ -54,5 +54,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "yaml_deprecated": {
+      "title": "P2000 YAML configuration is no longer used",
+      "description": "The P2000 sensor was imported from `configuration.yaml` as an integration and its settings are now managed in the UI (Settings → Devices & services → P2000 → Configure). Remove the `platform: p2000` entries from `configuration.yaml` and restart Home Assistant to dismiss this issue."
+    }
   }
 }

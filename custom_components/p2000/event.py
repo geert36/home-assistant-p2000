@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from homeassistant.components.event import EventEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -12,27 +11,26 @@ from .const import (
     CONF_ICON,
     DEFAULT_ICON,
     DEFAULT_NAME,
-    DOMAIN,
     EVENT_MELDING,
     EVENT_VERVOLGMELDING,
 )
-from .coordinator import P2000DataUpdateCoordinator
+from .coordinator import P2000ConfigEntry, P2000DataUpdateCoordinator
+from .entity import build_device_info
 from .melding import event_attributes, event_type_for
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: P2000ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the P2000 event entity from a config entry."""
     config = {**entry.data, **entry.options}
-    coordinator: P2000DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
             P2000EventEntity(
-                coordinator,
+                entry.runtime_data,
                 entry.entry_id,
                 config.get(CONF_NAME, DEFAULT_NAME),
                 config.get(CONF_ICON, DEFAULT_ICON),
@@ -58,6 +56,7 @@ class P2000EventEntity(CoordinatorEntity, EventEntity):
         self._attr_name = f"{name} melding"
         self._attr_icon = icon
         self._attr_unique_id = f"p2000_{entry_id}_event"
+        self._attr_device_info = build_device_info(entry_id, name)
 
     @property
     def available(self) -> bool:
