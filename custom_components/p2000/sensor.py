@@ -6,14 +6,15 @@ from typing import Any, Dict
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import P2000DataUpdateCoordinator
+from .coordinator import P2000ConfigEntry, P2000DataUpdateCoordinator
+from .entity import build_device_info
 from .const import (
     CONF_CAPCODES,
     CONF_DISCIPLINES,
@@ -54,21 +55,31 @@ async def async_setup_platform(
         context={"source": config_entries.SOURCE_IMPORT},
         data=dict(config),
     )
+
+    # The settings are imported once; the YAML entry itself is no longer used.
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "yaml_deprecated",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="yaml_deprecated",
+        learn_more_url="https://github.com/geert36/home-assistant-p2000#yaml-legacy",
+    )
     return True
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: P2000ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up P2000 sensor from a config entry."""
     config = {**entry.data, **entry.options}
-    coordinator: P2000DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities([
         P2000Sensor(
-            coordinator,
+            entry.runtime_data,
             entry.entry_id,
             config.get(CONF_NAME, DEFAULT_NAME),
             config.get(CONF_ICON, DEFAULT_ICON),
@@ -91,6 +102,7 @@ class P2000Sensor(CoordinatorEntity, SensorEntity):
         self._attr_name = name
         self._attr_icon = icon
         self._attr_unique_id = f"p2000_{entry_id}"
+        self._attr_device_info = build_device_info(entry_id, name)
 
     @property
     def available(self) -> bool:

@@ -54,5 +54,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "yaml_deprecated": {
+      "title": "P2000 YAML-configuratie wordt niet meer gebruikt",
+      "description": "De P2000-sensor is vanuit `configuration.yaml` overgenomen als integratie, en die instellingen worden nu via de gebruikersinterface beheerd (Instellingen → Apparaten & diensten → P2000 → Configureren). Verwijder de `platform: p2000`-regels uit `configuration.yaml` en herstart Home Assistant om deze melding te laten verdwijnen."
+    }
   }
 }

@@ -70,3 +70,6 @@ class P2000DataUpdateCoordinator(DataUpdateCoordinator):
             return self.data or {}
 
         return groups[0]
+
+
+type P2000ConfigEntry = ConfigEntry[P2000DataUpdateCoordinator]
